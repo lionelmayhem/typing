@@ -194,7 +194,7 @@ function highlightMissedLetters() {
 }
 
 function highlightBadWord() {
-	$(".word.active").addClass("error");
+	$("#inputDisplay .word").last().addClass("error");
 }
 
 function hideMissedLetters() {
@@ -235,7 +235,6 @@ function hideTimer() {
 
 function updateCaretPosition() {
 	let caret = $("#caret");
-	let activeWord = $("#words .word.active");
 	let inputLen = currentInput.length;
 	let currentLetterIndex = inputLen - 1;
 	if (currentLetterIndex == -1) {
@@ -244,7 +243,6 @@ function updateCaretPosition() {
 	let currentLetter = $($("#words .word.active letter")[currentLetterIndex]);
 	let currentLetterPos = currentLetter.position();
 	let letterHeight = currentLetter.height();
-
 	if (inputLen == 0) {
 		caret.css({
 			top: currentLetterPos.top - letterHeight / 4,
@@ -360,7 +358,7 @@ function showResult() {
 		});
 	$("#top #liveWpm").css("opacity", 0);
 	hideCaret();
-	//show all words after the test is finished
+	// show all words after the test is finished
 	// delWords = false;
 	// $.each($(".word"), (index, el) => {
 	//   if (delWords) {
@@ -463,49 +461,35 @@ function timesUp() {
 	showResult();
 }
 
-function compareInput() {
-	$(".word.active").empty();
+function compareInput(addMissing = false) {
+	$("#inputDisplay .word").last().empty();
 	let ret = "";
 	let currentWord = wordsList[currentWordIndex];
-	let letterElems = $($("#words .word")[currentWordIndex]).children("letter");
 	for (let i = 0; i < currentInput.length; i++) {
 		if (currentWord[i] == currentInput[i]) {
 			ret += '<letter class="correct">' + currentWord[i] + "</letter>";
-			// $(letterElems[i]).removeClass('incorrect').addClass('correct');
 		} else {
 			if (currentWord[i] == undefined) {
 				ret += '<letter class="incorrect extra">' + currentInput[i] + "</letter>";
-				// $($('#words .word')[currentWordIndex]).append('<letter class="incorrect">' + currentInput[i] + "</letter>");
 			} else {
-				ret += '<letter class="incorrect">' + currentWord[i] + "</letter>";
-				// $(letterElems[i]).removeClass('correct').addClass('incorrect');
+				ret += '<letter class="incorrect">' + currentInput[i] + "</letter>";
 			}
 		}
 	}
-	if (currentInput.length < currentWord.length) {
+	if (addMissing && currentInput.length < currentWord.length) {
 		for (let i = currentInput.length; i < currentWord.length; i++) {
 			ret += "<letter>" + currentWord[i] + "</letter>";
 		}
 	}
+	// show result if reached last word and input is correct
 	if (currentWord == currentInput && currentWordIndex == wordsList.length - 1) {
 		inputHistory.push(currentInput);
 		currentInput = "";
 		showResult();
 	}
-	$(".word.active").html(ret);
+	$("#inputDisplay .word").last().html(ret);
 	// liveWPM()
 }
-
-// $(document).ready(() => {
-// 	$("#centerContent").css("opacity", "0").removeClass("hidden");
-// 	// initWords();
-// 	$("#centerContent")
-// 		.stop(true, true)
-// 		.animate({ opacity: 1 }, 250, () => {
-// 			updateCaretPosition();
-// 		});
-// 	// $("#wordsInput").focus();
-// });
 
 $(document).on("click", "#top .config .wordCount .button", (e) => {
 	let wrd = e.currentTarget.innerHTML;
@@ -613,27 +597,38 @@ $("#wordsInput").on("compositionstart", () => {
 	isComposing = true;
 });
 
+// TODO: What if a word is entered with two or more compositionends? The inputbox will be set to none and fail.
+
 $("#wordsInput").on("compositionend", (e) => {
 	isComposing = false;
-	// Process the completed character
 	console.log("Composition End's event value:", e.target.value);
-	currentInput = e.target.value;
-	e.target.value = "";
 	if (wordsList[currentWordIndex].substring(currentInput.length, currentInput.length + 1) != currentInput) {
 		missedChars++;
 	}
-	setFocus(true);
 	compareInput();
-	updateCaretPosition();
+	e.target.value = "";
 });
 
-$("#wordsInput").on("input", function (e) {
-	if (isComposing) currentInput = e.target.value;
-	console.log("currentInput:", currentInput);
+function showInput(input) {
+	let lastWord = $("#inputDisplay .word").last();
+	if (lastWord.length === 0) {
+		// No word exists, create one
+		$("#inputDisplay").append("<div class='word'></div>");
+		lastWord = $("#inputDisplay .word").last();
+	}
+	let letters = "";
+	for (let c = 0; c < input.length; c++) {
+		letters += "<letter>" + input.charAt(c) + "</letter>";
+	}
+	lastWord.html(letters); // set
+}
 
+$("#wordsInput").on("input", (e) => {
+	if (e.target.value === " ") {
+		e.target.value = "";
+		return;
+	}
 	if (!$("#wordsInput").is(":focus")) return; // Don't process if not focused
-	// if (event["keyCode"] == 13) return;
-	// if (event["keyCode"] == 32) return;
 	if (currentInput == "" && inputHistory.length == 0) {
 		testActive = true;
 		stopCaretAnimation();
@@ -653,20 +648,17 @@ $("#wordsInput").on("input", function (e) {
 	} else {
 		if (!testActive) return;
 	}
+	currentInput = e.target.value;
 	setFocus(true);
-	compareInput();
-	updateCaretPosition();
-});
-
-$("#wordsInput").on("input", function (e) {
-	console.log("Raw Input:", e.target.value);
+	showInput(currentInput);
+	console.log("Current input:", currentInput);
 });
 
 $(window).resize(() => {
 	updateCaretPosition();
 });
 
-$(document).mousemove(function (event) {
+$(document).mousemove(() => {
 	setFocus(false);
 });
 
@@ -704,7 +696,6 @@ $(document).keydown((event) => {
 					}
 					currentWordIndex--;
 					updateActiveElement();
-					compareInput();
 				}
 			} else {
 				if (event.metaKey || event.ctrlKey) {
@@ -715,16 +706,17 @@ $(document).keydown((event) => {
 					console.log("delete a letter");
 					console.log("currentInput:", currentInput);
 				}
-				compareInput();
 			}
+			compareInput(true);
 			updateCaretPosition();
 		}
 
 		// space
 		if (event.key == " ") {
 			if (!testActive) return;
-			// event.preventDefault();
+			event.preventDefault();
 			if (currentInput == "") return;
+			if (isComposing) return;
 			let currentWord = wordsList[currentWordIndex];
 			if (testMode == "time") {
 				let currentTop = $($("#words .word")[currentWordIndex]).position().top;
@@ -737,6 +729,8 @@ $(document).keydown((event) => {
 					}
 				}
 			}
+			console.log("currentWord:", currentWord);
+			console.log("currentInput:", currentInput);
 			if (currentWord == currentInput) {
 				inputHistory.push(currentInput);
 				currentInput = "";
@@ -759,6 +753,9 @@ $(document).keydown((event) => {
 				updateCaretPosition();
 				console.log("completed a bad word");
 			}
+			// create new word
+			// since we create new word at the end, the "active" inputDisplay word should be the last word
+			$("#inputDisplay").append("<div class='word'></div>");
 			if (testMode == "time") {
 				addWord();
 			}

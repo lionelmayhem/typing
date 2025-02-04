@@ -465,14 +465,30 @@ key {
   user-select: none;
 }
 
-#wordsInput {
-  height: 2em;  /* Give it height */
-  padding: 5px;
-  margin-top: 20px; /* Space between words and input */
-  border: 1px solid #ccc;
-  outline: none;
-  display: block;
+.word {
+  margin: 5px;
+  color: var(--sub-color);
+  display: flex;
+  transition: 0.25s;
+  border-bottom: 2px solid transparent;
+  flex-shrink: 0;
+}
+
+#inputDisplay {
+  height: fit-content;
+  display: flex;
+  flex-wrap: wrap;
   width: 100%;
+  align-content: flex-start;
+}
+
+#wordsInput {
+  height: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  outline: none;
+  opacity: 0;
 }
 
 #restartTestButton {
@@ -492,15 +508,6 @@ key {
   &:focus {
     background: #0d0d0d;
   }
-}
-
-.word {
-  margin: 5px 5px;
-  color: var(--sub-color);
-  display: flex;
-  transition: 0.25s;
-  /*   margin-bottom: 1px; */
-  border-bottom: 2px solid transparent;
 }
 
 .word.error {
