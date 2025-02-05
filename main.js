@@ -597,16 +597,14 @@ $("#wordsInput").on("compositionstart", () => {
 	isComposing = true;
 });
 
-// TODO: What if a word is entered with two or more compositionends? The inputbox will be set to none and fail.
-
 $("#wordsInput").on("compositionend", (e) => {
+	// usually this is when enter is pressed after composing
 	isComposing = false;
 	console.log("Composition End's event value:", e.target.value);
 	if (wordsList[currentWordIndex].substring(currentInput.length, currentInput.length + 1) != currentInput) {
 		missedChars++;
 	}
 	compareInput();
-	e.target.value = "";
 });
 
 function showInput(input) {
@@ -624,10 +622,7 @@ function showInput(input) {
 }
 
 $("#wordsInput").on("input", (e) => {
-	if (e.target.value === " ") {
-		e.target.value = "";
-		return;
-	}
+	// space after compositionend will not get triggered
 	if (!$("#wordsInput").is(":focus")) return; // Don't process if not focused
 	if (currentInput == "" && inputHistory.length == 0) {
 		testActive = true;
@@ -651,7 +646,7 @@ $("#wordsInput").on("input", (e) => {
 	currentInput = e.target.value;
 	setFocus(true);
 	showInput(currentInput);
-	console.log("Current input:", currentInput);
+	console.log("Current Input:", currentInput);
 });
 
 $(window).resize(() => {
@@ -700,23 +695,26 @@ $(document).keydown((event) => {
 			} else {
 				if (event.metaKey || event.ctrlKey) {
 					currentInput = "";
+					$("#wordsInput").val("");
 					console.log("delete current word");
 				} else {
 					currentInput = currentInput.substring(0, currentInput.length - 1);
+					$("#wordsInput").val($("#wordsInput").val().slice(0, -1));
 					console.log("delete a letter");
 					console.log("currentInput:", currentInput);
 				}
 			}
-			compareInput(true);
+			compareInput();
 			updateCaretPosition();
 		}
 
 		// space
 		if (event.key == " ") {
-			if (!testActive) return;
 			event.preventDefault();
+			if (!testActive) return;
 			if (currentInput == "") return;
 			if (isComposing) return;
+			else $("#wordsInput").val("");
 			let currentWord = wordsList[currentWordIndex];
 			if (testMode == "time") {
 				let currentTop = $($("#words .word")[currentWordIndex]).position().top;
@@ -729,8 +727,7 @@ $(document).keydown((event) => {
 					}
 				}
 			}
-			console.log("currentWord:", currentWord);
-			console.log("currentInput:", currentInput);
+			console.log({ currentWord, currentInput });
 			if (currentWord == currentInput) {
 				inputHistory.push(currentInput);
 				currentInput = "";
@@ -753,8 +750,8 @@ $(document).keydown((event) => {
 				updateCaretPosition();
 				console.log("completed a bad word");
 			}
-			// create new word
-			// since we create new word at the end, the "active" inputDisplay word should be the last word
+			compareInput(true);
+			// create new word, and since we create new word at the end, the "active" inputDisplay word should be the last word
 			$("#inputDisplay").append("<div class='word'></div>");
 			if (testMode == "time") {
 				addWord();
