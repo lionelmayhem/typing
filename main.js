@@ -154,6 +154,7 @@ function addWord() {
 
 function showWords() {
 	$("#words").empty();
+	// create words for #words
 	if (testMode == "words" || testMode == "custom") {
 		for (let i = 0; i < wordsList.length; i++) {
 			let w = "<div class='word'>";
@@ -174,6 +175,8 @@ function showWords() {
 			$("#words").append(w);
 		}
 	}
+	// No word exists at first for #inputDisplay, create one
+	$("#inputDisplay").append("<div class='word'><letter></letter></div>");
 	updateActiveElement();
 	updateCaretPosition();
 }
@@ -181,6 +184,8 @@ function showWords() {
 function updateActiveElement() {
 	$("#words .word").removeClass("active");
 	$($("#words .word")[currentWordIndex]).addClass("active").removeClass("error");
+	$("#inputDisplay .word").removeClass("active");
+	$($("#inputDisplay .word")[currentWordIndex]).addClass("active").removeClass("error");
 }
 
 function highlightMissedLetters() {
@@ -234,24 +239,26 @@ function hideTimer() {
 }
 
 function updateCaretPosition() {
+	console.log("updateCaretPosition called");
 	let caret = $("#caret");
 	let inputLen = currentInput.length;
-	let currentLetterIndex = inputLen - 1;
-	if (currentLetterIndex == -1) {
-		currentLetterIndex = 0;
-	}
-	let currentLetter = $($("#words .word.active letter")[currentLetterIndex]);
-	let currentLetterPos = currentLetter.position();
-	let letterHeight = currentLetter.height();
+	// let currentLetterIndex = inputLen - 1;
+	// if (currentLetterIndex == -1) {
+	// 	currentLetterIndex = 0;
+	// }
+	let lastLetter = $("#inputDisplay .word.active letter").last();
+	console.log("lastLetter:", lastLetter[0]);
+	let lastLetterPos = lastLetter.position();
+	let letterHeight = lastLetter.height();
 	if (inputLen == 0) {
 		caret.css({
-			top: currentLetterPos.top - letterHeight / 4,
-			left: currentLetterPos.left - caret.width() / 2,
+			top: lastLetterPos.top - letterHeight / 4,
+			left: lastLetterPos.left - caret.width() / 2,
 		});
 	} else {
 		caret.css({
-			top: currentLetterPos.top - letterHeight / 4,
-			left: currentLetterPos.left + currentLetter.width() - caret.width() / 2,
+			top: lastLetterPos.top - letterHeight / 4,
+			left: lastLetterPos.left + lastLetter.width() - caret.width() / 2,
 		});
 	}
 }
@@ -463,7 +470,7 @@ function timesUp() {
 
 function compareInput(addMissing = false) {
 	$("#inputDisplay .word").last().empty();
-	let ret = "";
+	let ret = "<letter></letter>"; // for when input.length = 0
 	let currentWord = wordsList[currentWordIndex];
 	for (let i = 0; i < currentInput.length; i++) {
 		if (currentWord[i] == currentInput[i]) {
@@ -609,20 +616,16 @@ $("#wordsInput").on("compositionend", (e) => {
 
 function showInput(input) {
 	let lastWord = $("#inputDisplay .word").last();
-	if (lastWord.length === 0) {
-		// No word exists, create one
-		$("#inputDisplay").append("<div class='word'></div>");
-		lastWord = $("#inputDisplay .word").last();
-	}
 	let letters = "";
+	console.log("input length:", input.length);
 	for (let c = 0; c < input.length; c++) {
 		letters += "<letter>" + input.charAt(c) + "</letter>";
 	}
-	lastWord.html(letters); // set
+	lastWord.html(letters); // set last word to input
 }
 
 $("#wordsInput").on("input", (e) => {
-	// space after compositionend will not get triggered
+	// backspace, space before and composition and space after compositionend will not get triggered
 	if (!$("#wordsInput").is(":focus")) return; // Don't process if not focused
 	if (currentInput == "" && inputHistory.length == 0) {
 		testActive = true;
@@ -646,6 +649,7 @@ $("#wordsInput").on("input", (e) => {
 	currentInput = e.target.value;
 	setFocus(true);
 	showInput(currentInput);
+	updateCaretPosition();
 	console.log("Current Input:", currentInput);
 });
 
@@ -704,18 +708,23 @@ $(document).keydown((event) => {
 					console.log("currentInput:", currentInput);
 				}
 			}
-			compareInput();
+			// compareInput();
 			updateCaretPosition();
 		}
 
 		// space
 		if (event.key == " ") {
 			event.preventDefault();
+			compareInput(true);
 			if (!testActive) return;
 			if (currentInput == "") return;
 			if (isComposing) return;
 			else $("#wordsInput").val("");
 			let currentWord = wordsList[currentWordIndex];
+
+			// create new empty word
+			$("#inputDisplay").append("<div class='word'><letter></letter></div>");
+
 			if (testMode == "time") {
 				let currentTop = $($("#words .word")[currentWordIndex]).position().top;
 				let nextTop = $($("#words .word")[currentWordIndex + 1]).position().top;
@@ -732,7 +741,7 @@ $(document).keydown((event) => {
 				inputHistory.push(currentInput);
 				currentInput = "";
 				currentWordIndex++;
-				updateActiveElement();
+				updateActiveElement(); // make the new empty word active
 				updateCaretPosition();
 				console.log("completed a good word");
 				// don't have to show result since space isn't needed at the end
@@ -743,16 +752,13 @@ $(document).keydown((event) => {
 				currentWordIndex++;
 				if (currentWordIndex == wordsList.length) {
 					showResult();
-					console.log("last word is bad word");
+					console.log("finished test, last word is bad word");
 					return;
 				}
 				updateActiveElement();
 				updateCaretPosition();
 				console.log("completed a bad word");
 			}
-			compareInput(true);
-			// create new word, and since we create new word at the end, the "active" inputDisplay word should be the last word
-			$("#inputDisplay").append("<div class='word'></div>");
 			if (testMode == "time") {
 				addWord();
 			}
@@ -1014,11 +1020,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	console.log("DOM loaded");
 	restartTest();
 	$("#centerContent").css("opacity", "0").removeClass("hidden");
-	$("#centerContent")
-		.stop(true, true)
-		.animate({ opacity: 1 }, 250, () => {
-			updateCaretPosition();
-		});
+	$("#centerContent").stop(true, true).animate({ opacity: 1 }, 250);
 });
 
 // debug use
