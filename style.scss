@@ -5,7 +5,7 @@
   --sub-color: #444;
   --bg-color: #111;
   --caret-color: #fff;
-  --current-word-color: pink;
+  --current-word-color: #eee;
   --roundness: 0.25rem;
 }
 /* 
@@ -489,6 +489,14 @@ key {
   border: none;
   outline: none;
   opacity: 0;
+
+  // for debug
+  height: 2rem;
+  padding: 5px;
+  border: 1px solid pink;
+  opacity: 1;
+  background: white;
+  color: black;
 }
 
 #restartTestButton {

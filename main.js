@@ -166,13 +166,24 @@ function showWords() {
 	updateCaretPosition();
 }
 
-function newWord() {
-	$("#inputDisplay").append("<div class='word'><letter></letter></div>");
-
+function updateCurrentWord() {
 	$("#words .word").removeClass("current");
 	$($("#words .word")[currentWordIndex]).addClass("current");
 	$("#inputDisplay .word").removeClass("current");
 	$($("#inputDisplay .word")[currentWordIndex]).addClass("current").removeClass("error");
+	$("#inputDisplay .word").each(function (index) {
+		console.log(`Word ${index}:`, $(this)[0].outerHTML);
+	});
+}
+
+function newWord() {
+	$("#inputDisplay").append("<div class='word'><letter></letter></div>");
+	updateCurrentWord();
+}
+
+function deleteWord() {
+	$("#inputDisplay .word").last().remove();
+	updateCurrentWord();
 }
 
 function highlightMissedLetters() {
@@ -226,7 +237,6 @@ function hideTimer() {
 }
 
 function updateCaretPosition() {
-	console.log("updateCaretPosition called");
 	let caret = $("#caret");
 	let inputLen = currentInput.length;
 	// let currentLetterIndex = inputLen - 1;
@@ -435,6 +445,7 @@ function compareInput(addMissing = false) {
 	$("#inputDisplay .word").last().empty();
 	let ret = "<letter></letter>"; // for when input.length = 0
 	let currentWord = wordsList[currentWordIndex];
+	console.log({ currentInput, currentWord });
 	for (let i = 0; i < currentInput.length; i++) {
 		if (currentWord[i] == currentInput[i]) {
 			ret += '<letter class="correct">' + currentWord[i] + "</letter>";
@@ -457,8 +468,9 @@ function compareInput(addMissing = false) {
 		currentInput = "";
 		showResult();
 	}
-	$("#inputDisplay .word").last().html(ret);
-	// liveWPM()
+	$("#inputDisplay .word.current").html(ret);
+	console.log("Current word:", $("#inputDisplay .word.current")[0].outerHTML);
+	// liveWPM();
 }
 
 $(document).on("click", "#top .config .wordCount .button", (e) => {
@@ -559,7 +571,8 @@ $("#wordsInput").on("focusout", (event) => {
 	hideCaret();
 });
 
-$("#wordsInput").on("compositionstart", () => {
+$("#wordsInput").on("compositionstart", (e) => {
+	// console.log("Composition start triggered by:", e.originalEvent);
 	isComposing = true;
 	let currentWord = $("#inputDisplay .word.current");
 	console.log("Composition started, current word:", currentWord[0]);
@@ -577,8 +590,7 @@ $("#wordsInput").on("compositionend", (e) => {
 
 function showInput(input) {
 	let lastWord = $("#inputDisplay .word").last();
-	let letters = "";
-	console.log("input length:", input.length);
+	let letters = "<letter></letter>";
 	for (let c = 0; c < input.length; c++) {
 		letters += "<letter>" + input.charAt(c) + "</letter>";
 	}
@@ -586,6 +598,10 @@ function showInput(input) {
 }
 
 $("#wordsInput").on("input", (e) => {
+	if (e.originalEvent.inputType === "deleteContentBackward") {
+		return;
+	}
+	console.log("TRIGGER");
 	// backspace, space before and composition and space after compositionend will not get triggered
 	if (!$("#wordsInput").is(":focus")) return; // Don't process if not focused
 	if (currentInput == "" && inputHistory.length == 0) {
@@ -636,7 +652,6 @@ $(document).keydown((event) => {
 	if ($("#wordsInput").is(":focus")) {
 		// backspace
 		if (event.key == "Backspace") {
-			event.preventDefault();
 			if (!testActive) return;
 			if (currentInput == "" && inputHistory.length > 0) {
 				if (
@@ -651,22 +666,28 @@ $(document).keydown((event) => {
 						inputHistory.pop();
 						console.log("went back a word (to start)");
 					} else {
+						event.preventDefault(); // To prevent deleting an extra letter
 						currentInput = inputHistory.pop();
+						$("#wordsInput").val(currentInput);
+						console.log("#wordsInput:", $("#wordsInput").val());
 						console.log("went back to word:", currentInput);
 					}
 					currentWordIndex--;
-					newWord();
+					deleteWord();
 				}
 			} else {
 				if (event.metaKey || event.ctrlKey) {
 					currentInput = "";
-					$("#wordsInput").val("");
+					// wordsInput's value will be changed by the IME, so don't bother?
+					// $("#wordsInput").val("");
 					console.log("delete current word");
 				} else {
+					let deleted = currentInput.slice(-1);
 					currentInput = currentInput.substring(0, currentInput.length - 1);
-					$("#wordsInput").val($("#wordsInput").val().slice(0, -1));
-					console.log("delete a letter");
-					console.log("currentInput:", currentInput);
+
+					console.log("deleted a letter: %s -> %s", currentInput + deleted, currentInput);
+					// $("#wordsInput").val(currentInput);
+					console.log("#wordsInput:", $("#wordsInput").val());
 				}
 			}
 			compareInput();
@@ -987,6 +1008,5 @@ $(document).on("click", ".button", (e) => {
 });
 
 // $("#wordsInput").on("input", function (e) {
-// 	console.log("Input:", e.target.value);
-// 	console.log("Input type:", e.originalEvent.inputType);
+// 	console.log("FUCKING RAW INPUT:", e.target.value);
 // });
