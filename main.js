@@ -12,23 +12,10 @@ let testActive = false;
 let testMode = "words";
 let testStart, testEnd;
 let missedChars = 0;
-// let focus = false;
 let punctuationMode = false;
 let isComposing = false;
 
 let customText = "The quick brown fox jumped over the lazy dog";
-
-function test() {
-	$("#resultScreenshot").removeClass("hidden");
-	html2canvas($("#resultScreenshot"), {
-		onclone: function (clonedDoc) {
-			clonedDoc.getElementById("resultScreenshot").style.display = "block";
-		},
-	}).then((canvas) => {
-		$("#resultScreenshot").removeClass("hidden");
-		document.body.appendChild(canvas);
-	});
-}
 
 function setFocus(foc) {
 	if (foc) {
@@ -175,17 +162,17 @@ function showWords() {
 			$("#words").append(w);
 		}
 	}
-	// No word exists at first for #inputDisplay, create one
-	$("#inputDisplay").append("<div class='word'><letter></letter></div>");
-	updateActiveElement();
+	newWord();
 	updateCaretPosition();
 }
 
-function updateActiveElement() {
-	$("#words .word").removeClass("active");
-	$($("#words .word")[currentWordIndex]).addClass("active").removeClass("error");
-	$("#inputDisplay .word").removeClass("active");
-	$($("#inputDisplay .word")[currentWordIndex]).addClass("active").removeClass("error");
+function newWord() {
+	$("#inputDisplay").append("<div class='word'><letter></letter></div>");
+
+	$("#words .word").removeClass("current");
+	$($("#words .word")[currentWordIndex]).addClass("current");
+	$("#inputDisplay .word").removeClass("current");
+	$($("#inputDisplay .word")[currentWordIndex]).addClass("current").removeClass("error");
 }
 
 function highlightMissedLetters() {
@@ -246,8 +233,8 @@ function updateCaretPosition() {
 	// if (currentLetterIndex == -1) {
 	// 	currentLetterIndex = 0;
 	// }
-	let lastLetter = $("#inputDisplay .word.active letter").last();
-	console.log("lastLetter:", lastLetter[0]);
+	let lastLetter = $("#inputDisplay .word.current letter").last();
+	// console.log("lastLetter:", lastLetter[0]);
 	let lastLetterPos = lastLetter.position();
 	let letterHeight = lastLetter.height();
 	if (inputLen == 0) {
@@ -365,30 +352,6 @@ function showResult() {
 		});
 	$("#top #liveWpm").css("opacity", 0);
 	hideCaret();
-	// show all words after the test is finished
-	// delWords = false;
-	// $.each($(".word"), (index, el) => {
-	//   if (delWords) {
-	//     $(el).remove();
-	//   } else {
-	//     $(el).removeClass("hidden");
-	//     if ($(el).hasClass("active")) {
-	//       delWords = true;
-	//     }
-	//   }
-	// });
-	// newHeight =
-	//   $(".word.active").outerHeight(true) +
-	//   $(".word.active").position().top -
-	//   $("#words").position().top;
-	// $(".word.active").addClass("hidden");
-	// $("#words").stop(true, true).css("opacity", "1").animate(
-	//   {
-	//     opacity: 1,
-	//     height: newHeight
-	//   },
-	//   250
-	// );
 }
 
 function updateTimer() {
@@ -584,10 +547,6 @@ $("#restartTestButton").click((event) => {
 	restartTest();
 });
 
-// $("#wordsInput").keypress((event) => {
-// 	// event.preventDefault();
-// });
-
 $("#words").click((e) => {
 	$("#wordsInput").focus();
 });
@@ -602,6 +561,8 @@ $("#wordsInput").on("focusout", (event) => {
 
 $("#wordsInput").on("compositionstart", () => {
 	isComposing = true;
+	let currentWord = $("#inputDisplay .word.current");
+	console.log("Composition started, current word:", currentWord[0]);
 });
 
 $("#wordsInput").on("compositionend", (e) => {
@@ -691,10 +652,10 @@ $(document).keydown((event) => {
 						console.log("went back a word (to start)");
 					} else {
 						currentInput = inputHistory.pop();
-						console.log("went back a word");
+						console.log("went back to word:", currentInput);
 					}
 					currentWordIndex--;
-					updateActiveElement();
+					newWord();
 				}
 			} else {
 				if (event.metaKey || event.ctrlKey) {
@@ -708,7 +669,7 @@ $(document).keydown((event) => {
 					console.log("currentInput:", currentInput);
 				}
 			}
-			// compareInput();
+			compareInput();
 			updateCaretPosition();
 		}
 
@@ -721,9 +682,6 @@ $(document).keydown((event) => {
 			if (isComposing) return;
 			else $("#wordsInput").val("");
 			let currentWord = wordsList[currentWordIndex];
-
-			// create new empty word
-			$("#inputDisplay").append("<div class='word'><letter></letter></div>");
 
 			if (testMode == "time") {
 				let currentTop = $($("#words .word")[currentWordIndex]).position().top;
@@ -741,7 +699,7 @@ $(document).keydown((event) => {
 				inputHistory.push(currentInput);
 				currentInput = "";
 				currentWordIndex++;
-				updateActiveElement(); // make the new empty word active
+				newWord(); // make the new empty word active
 				updateCaretPosition();
 				console.log("completed a good word");
 				// don't have to show result since space isn't needed at the end
@@ -755,7 +713,7 @@ $(document).keydown((event) => {
 					console.log("finished test, last word is bad word");
 					return;
 				}
-				updateActiveElement();
+				newWord();
 				updateCaretPosition();
 				console.log("completed a bad word");
 			}
@@ -884,7 +842,7 @@ let currentCommands = commands;
 
 $("#commandLine input").keydown((e) => {
 	if (e.keyCode == 13) {
-		//enter
+		// enter
 		e.preventDefault();
 		let command = $(".suggestions .entry.active").attr("command");
 		let subgroup = false;
@@ -898,7 +856,7 @@ $("#commandLine input").keydown((e) => {
 		return;
 	}
 	if (e.keyCode == 38 || e.keyCode == 40) {
-		//up
+		// up
 		let entries = $(".suggestions .entry");
 		let activenum = -1;
 		$.each(entries, (index, obj) => {

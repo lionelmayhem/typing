@@ -5,7 +5,7 @@
   --sub-color: #444;
   --bg-color: #111;
   --caret-color: #fff;
-  --active-word-color: #444;
+  --current-word-color: pink;
   --roundness: 0.25rem;
 }
 /* 
@@ -510,6 +510,12 @@ key {
   }
 }
 
+.active {
+  display: flex;
+  border-bottom: 2px solid pink;
+  flex-shrink: 0;
+}
+
 .word.error {
   /*   margin-bottom: 1px; */
   border-bottom: 2px solid #da3333;
@@ -517,8 +523,8 @@ key {
     -2px 0px 0px #111, 0px 1px 0px #111, 1px 1px 0px #111, -1px 1px 0px #111;
 }
 
-.word.active {
-  color: var(--active-word-color);
+.word.current {
+  color: var(--current-word-color);
 }
 
 .word letter {

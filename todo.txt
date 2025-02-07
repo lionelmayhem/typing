@@ -2,3 +2,4 @@
 - add underline for not yet composed chars
 - caret blinking or not
 - chars selector should follow caret
+- currentInput to #wordsInput
