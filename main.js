@@ -14,6 +14,7 @@ let testStart, testEnd;
 let missedChars = 0;
 let punctuationMode = false;
 let isComposing = false;
+let activeText = "";
 
 let customText = "The quick brown fox jumped over the lazy dog";
 
@@ -243,7 +244,7 @@ function updateCaretPosition() {
 	// if (currentLetterIndex == -1) {
 	// 	currentLetterIndex = 0;
 	// }
-	let lastLetter = $("#inputDisplay .word.current letter").last();
+	let lastLetter = $("#inputDisplay .word.current letter, .word.current active-letter").last();
 	// console.log("lastLetter:", lastLetter[0]);
 	let lastLetterPos = lastLetter.position();
 	let letterHeight = lastLetter.height();
@@ -442,16 +443,26 @@ function timesUp() {
 }
 
 function compareInput(addMissing = false) {
-	$("#inputDisplay .word").last().empty();
-	let ret = "<letter></letter>"; // for when input.length = 0
+	let ret = "<letter></letter>"; // for updating caret when input.length = 0
 	let currentWord = wordsList[currentWordIndex];
+	$("#inputDisplay .word").last().empty();
+
+	// set current word in #words (since it might be padded)
+	let cw = "";
+	for (let i = 0; i < currentWord.length; i++) {
+		cw += "<letter>" + currentWord[i] + "</letter>";
+	}
+	$("#words .word.current").html(cw);
+
 	console.log({ currentInput, currentWord });
 	for (let i = 0; i < currentInput.length; i++) {
 		if (currentWord[i] == currentInput[i]) {
 			ret += '<letter class="correct">' + currentWord[i] + "</letter>";
 		} else {
 			if (currentWord[i] == undefined) {
+				// extra letter -> pad #words
 				ret += '<letter class="incorrect extra">' + currentInput[i] + "</letter>";
+				$("#words .word.current").append("<letter style='color: transparent'>哈</letter>");
 			} else {
 				ret += '<letter class="incorrect">' + currentInput[i] + "</letter>";
 			}
@@ -469,7 +480,7 @@ function compareInput(addMissing = false) {
 		showResult();
 	}
 	$("#inputDisplay .word.current").html(ret);
-	console.log("Current word:", $("#inputDisplay .word.current")[0].outerHTML);
+	// console.log("Current word:", $("#inputDisplay .word.current")[0].outerHTML);
 	// liveWPM();
 }
 
@@ -572,36 +583,48 @@ $("#wordsInput").on("focusout", (event) => {
 });
 
 $("#wordsInput").on("compositionstart", (e) => {
-	// console.log("Composition start triggered by:", e.originalEvent);
 	isComposing = true;
-	let currentWord = $("#inputDisplay .word.current");
-	console.log("Composition started, current word:", currentWord[0]);
+
+	activeText = e.originalEvent.data;
+});
+
+$("#wordsInput").on("compositionupdate", (e) => {
+	activeText = e.originalEvent.data;
 });
 
 $("#wordsInput").on("compositionend", (e) => {
 	// usually this is when enter is pressed after composing
 	isComposing = false;
-	console.log("Composition End's event value:", e.target.value);
+	activeText = "";
 	if (wordsList[currentWordIndex].substring(currentInput.length, currentInput.length + 1) != currentInput) {
 		missedChars++;
 	}
 	compareInput();
 });
 
-function showInput(input) {
+// $("#inputDisplay").append("<div class='active'></div>");
+
+function showInput() {
+	// will always be composing?
 	let lastWord = $("#inputDisplay .word").last();
 	let letters = "<letter></letter>";
-	for (let c = 0; c < input.length; c++) {
-		letters += "<letter>" + input.charAt(c) + "</letter>";
+	let currentLen = currentInput.length;
+	let activeLen = activeText.length;
+	for (let c = 0; c < currentLen - activeLen; c++) {
+		letters += "<letter>" + currentInput.charAt(c) + "</letter>";
+	}
+	for (let c = currentLen - activeLen; c < currentLen; c++) {
+		letters += "<active-letter>" + currentInput.charAt(c) + "</active-letter>";
 	}
 	lastWord.html(letters); // set last word to input
+	console.log("ACTIVE LENGTH:", activeLen);
 }
 
 $("#wordsInput").on("input", (e) => {
 	if (e.originalEvent.inputType === "deleteContentBackward") {
+		console.log("DELETE");
 		return;
 	}
-	console.log("TRIGGER");
 	// backspace, space before and composition and space after compositionend will not get triggered
 	if (!$("#wordsInput").is(":focus")) return; // Don't process if not focused
 	if (currentInput == "" && inputHistory.length == 0) {
@@ -625,7 +648,7 @@ $("#wordsInput").on("input", (e) => {
 	}
 	currentInput = e.target.value;
 	setFocus(true);
-	showInput(currentInput);
+	showInput();
 	updateCaretPosition();
 	console.log("Current Input:", currentInput);
 });
@@ -669,7 +692,6 @@ $(document).keydown((event) => {
 						event.preventDefault(); // To prevent deleting an extra letter
 						currentInput = inputHistory.pop();
 						$("#wordsInput").val(currentInput);
-						console.log("#wordsInput:", $("#wordsInput").val());
 						console.log("went back to word:", currentInput);
 					}
 					currentWordIndex--;
@@ -686,8 +708,7 @@ $(document).keydown((event) => {
 					currentInput = currentInput.substring(0, currentInput.length - 1);
 
 					console.log("deleted a letter: %s -> %s", currentInput + deleted, currentInput);
-					// $("#wordsInput").val(currentInput);
-					console.log("#wordsInput:", $("#wordsInput").val());
+					// console.log("#wordsInput:", $("#wordsInput").val());
 				}
 			}
 			compareInput();
@@ -697,11 +718,9 @@ $(document).keydown((event) => {
 		// space
 		if (event.key == " ") {
 			event.preventDefault();
+			if (!testActive || isComposing || currentInput === "") return;
+			$("#wordsInput").val("");
 			compareInput(true);
-			if (!testActive) return;
-			if (currentInput == "") return;
-			if (isComposing) return;
-			else $("#wordsInput").val("");
 			let currentWord = wordsList[currentWordIndex];
 
 			if (testMode == "time") {
@@ -715,7 +734,6 @@ $(document).keydown((event) => {
 					}
 				}
 			}
-			console.log({ currentWord, currentInput });
 			if (currentWord == currentInput) {
 				inputHistory.push(currentInput);
 				currentInput = "";

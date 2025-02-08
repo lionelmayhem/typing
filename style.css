@@ -508,12 +508,6 @@ key {
   background: #0d0d0d;
 }
 
-.active {
-  display: flex;
-  border-bottom: 2px solid pink;
-  flex-shrink: 0;
-}
-
 .word.error {
   /*   margin-bottom: 1px; */
   border-bottom: 2px solid #da3333;
@@ -524,11 +518,16 @@ key {
   color: var(--current-word-color);
 }
 
-.word letter {
-  /*   transition: 0.1s; */
+.word letter,
+active-letter {
   height: 1rem;
   line-height: 1rem;
+  /*   transition: 0.1s; */
   /* margin: 0 1px; */
+}
+
+.word active-letter {
+  border-bottom: 2px solid white;
 }
 
 .word letter.correct {
