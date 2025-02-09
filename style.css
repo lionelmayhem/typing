@@ -445,6 +445,7 @@ key {
   line-height: 2rem;
 }
 
+#firstRow,
 #words {
   height: -moz-fit-content;
   height: fit-content;

@@ -1,1 +1,3 @@
+- fix multiple rows
 - caret blinking or not
+- fix replay button

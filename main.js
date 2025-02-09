@@ -4,7 +4,7 @@ let wordsList = [];
 let currentWordIndex = 0;
 let inputHistory = [];
 let currentInput = "";
-let wordsConfig = 10;
+let wordsConfig = 50;
 let timeConfig = 30;
 let time = timeConfig;
 let timer = null;
@@ -125,7 +125,6 @@ function initWords() {
 			wordsList.push(w[i]);
 		}
 	}
-	console.log("final wordsList:", wordsList);
 	showWords();
 }
 
@@ -142,6 +141,7 @@ function addWord() {
 
 function showWords() {
 	$("#words").empty();
+	$("#firstRow").empty();
 	// create words for #words
 	if (testMode == "words" || testMode == "custom") {
 		for (let i = 0; i < wordsList.length; i++) {
@@ -163,8 +163,22 @@ function showWords() {
 			$("#words").append(w);
 		}
 	}
-	newWord();
-	updateCaretPosition();
+
+	requestAnimationFrame(() => {
+		// move first row of #words to #firstRow
+		const firstRowTop = $("#words").children().first().position().top;
+		const firstRowWords = $("#words")
+			.children()
+			.filter(function () {
+				return $(this).position().top === firstRowTop;
+			});
+		$("#firstRow").append(firstRowWords); // IMPORTANT: jQuery append() MOVES elements, that's why we don't have to modify #words again
+		console.log(firstRowWords);
+
+		// create starting point for #inputDisplay
+		newWord();
+		updateCaretPosition();
+	});
 }
 
 function updateCurrentWord() {
@@ -257,7 +271,6 @@ function updateCaretPosition() {
 	$("#wordsInput").css({
 		...newPos,
 		top: newPos.top + 20,
-		ˊ,
 	});
 }
 
@@ -1016,8 +1029,9 @@ function displayFoundCommands() {
 document.addEventListener("DOMContentLoaded", () => {
 	console.log("DOM loaded");
 	restartTest();
-	$("#centerContent").css("opacity", "0").removeClass("hidden");
-	$("#centerContent").stop(true, true).animate({ opacity: 1 }, 250);
+	$("#centerContent").removeClass("hidden");
+	// $("#centerContent").css("opacity", "0").removeClass("hidden");
+	// $("#centerContent").stop(true, true).animate({ opacity: 1 }, 250);
 });
 
 // debug use
