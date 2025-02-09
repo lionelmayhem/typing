@@ -472,6 +472,7 @@ key {
 	transition: 0.25s;
 	border-bottom: 2px solid transparent;
 	flex-shrink: 0;
+	align-items: flex-end;
 }
 
 #inputDisplay {
@@ -489,14 +490,15 @@ key {
 	border: none;
 	outline: none;
 	opacity: 0;
+	position: absolute;
 
 	// // for debug
-	height: 2rem;
-	padding: 5px;
-	border: 1px solid pink;
-	opacity: 1;
-	background: white;
-	color: black;
+	// height: 2rem;
+	// padding: 5px;
+	// border: 1px solid pink;
+	// opacity: 1;
+	// background: white;
+	// color: black;
 }
 
 #restartTestButton {
@@ -519,10 +521,8 @@ key {
 }
 
 .word.error {
-	/*   margin-bottom: 1px; */
 	border-bottom: 2px solid #da3333;
-	text-shadow: 1px 0px 0px #111, 2px 0px 0px #111, -1px 0px 0px #111, -2px 0px 0px #111, 0px 1px 0px #111,
-		1px 1px 0px #111, -1px 1px 0px #111;
+	text-shadow: 1px 1px 1px #111;
 }
 
 .word.current {
@@ -530,19 +530,27 @@ key {
 }
 
 .word letter,
-active-letter {
+.word active-letter {
 	height: 1rem;
 	line-height: 1rem;
-	/*   transition: 0.1s; */
-	/* margin: 0 1px; */
+	display: inline-block;
+	position: relative;
+	vertical-align: bottom;
 }
 
 .word active-letter {
-	border-bottom: 2px solid white;
+	text-shadow: 1px 1px 1px #111;
 }
 
-.word letter.correct {
-	color: var(--main-color);
+.word active-letter::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	z-index: -1;
+	bottom: -2px; /* Adjust this value to move the line lower */
+	width: 100%;
+	height: 2px;
+	background: white;
 }
 
 .word letter.incorrect {

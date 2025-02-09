@@ -245,20 +245,20 @@ function updateCaretPosition() {
 	// 	currentLetterIndex = 0;
 	// }
 	let lastLetter = $("#inputDisplay .word.current letter, .word.current active-letter").last();
-	// console.log("lastLetter:", lastLetter[0]);
 	let lastLetterPos = lastLetter.position();
 	let letterHeight = lastLetter.height();
-	if (inputLen == 0) {
-		caret.css({
-			top: lastLetterPos.top - letterHeight / 4,
-			left: lastLetterPos.left - caret.width() / 2,
-		});
-	} else {
-		caret.css({
-			top: lastLetterPos.top - letterHeight / 4,
-			left: lastLetterPos.left + lastLetter.width() - caret.width() / 2,
-		});
-	}
+
+	const newPos = {
+		top: lastLetterPos.top - letterHeight / 4,
+		left: lastLetterPos.left - caret.width() / 2 + (inputLen > 0 ? lastLetter.width() : 0),
+	};
+	caret.css(newPos);
+	// update input's position to match caret's (with tuning)
+	$("#wordsInput").css({
+		...newPos,
+		top: newPos.top + 20,
+		ˊ,
+	});
 }
 
 function calculateStats() {
