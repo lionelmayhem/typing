@@ -142,6 +142,7 @@ function addWord() {
 function showWords() {
 	$("#words").empty();
 	$("#firstRow").empty();
+	$("#inputDisplay").empty();
 	let currentLineWidth = 0;
 	const containerWidth = parseInt($("#centerContent").css("max-width"));
 	const letterWidth = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -170,8 +171,8 @@ function showWords() {
 }
 
 function updateCurrentWord() {
-	$("#words .word").removeClass("current");
-	$($("#words .word")[currentWordIndex]).addClass("current");
+	$("#firstRow .word").removeClass("current");
+	$($("#firstRow .word")[currentWordIndex]).addClass("current");
 	$("#inputDisplay .word").removeClass("current");
 	$($("#inputDisplay .word")[currentWordIndex]).addClass("current").removeClass("error");
 	$("#inputDisplay .word").each(function (index) {
@@ -374,6 +375,7 @@ function updateTimer() {
 		.css("width", 100 - percent + "vw");
 }
 function restartTest() {
+	$("#wordsInput").val("");
 	let oldHeight = $("#words").height();
 	let resultShown = !$("#top .result").hasClass("hidden");
 	$("#top .result")
@@ -448,12 +450,12 @@ function compareInput(addMissing = false) {
 	let currentWord = wordsList[currentWordIndex];
 	$("#inputDisplay .word").last().empty();
 
-	// set current word in #words (since it might be padded)
+	// set current word in #firstRow (since it might be padded)
 	let cw = "";
 	for (let i = 0; i < currentWord.length; i++) {
 		cw += "<letter>" + currentWord[i] + "</letter>";
 	}
-	$("#words .word.current").html(cw);
+	$("#firstRow .word.current").html(cw);
 
 	console.log({ currentInput, currentWord });
 	for (let i = 0; i < currentInput.length; i++) {
@@ -461,9 +463,9 @@ function compareInput(addMissing = false) {
 			ret += '<letter class="correct">' + currentWord[i] + "</letter>";
 		} else {
 			if (currentWord[i] == undefined) {
-				// extra letter -> pad #words
+				// extra letter -> pad #firstRow
 				ret += '<letter class="incorrect extra">' + currentInput[i] + "</letter>";
-				$("#words .word.current").append("<letter style='color: transparent'>哈</letter>");
+				$("#firstRow .word.current").append("<letter style='color: transparent'>哈</letter>");
 			} else {
 				ret += '<letter class="incorrect">' + currentInput[i] + "</letter>";
 			}
@@ -571,7 +573,7 @@ $("#restartTestButton").click((event) => {
 	restartTest();
 });
 
-$("#words").click((e) => {
+$("#firstRow, #inputDisplay, #words").click((e) => {
 	$("#wordsInput").focus();
 });
 
