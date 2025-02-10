@@ -165,11 +165,8 @@ a:hover {
   margin: 0 auto;
   display: grid;
   grid-auto-flow: row;
-  /* grid-template-rows: 2rem auto 1rem; */
   height: 100%;
   gap: 1rem;
-  /* margin-top: 1rem; */
-  /* margin-bottom: 1rem; */
   align-items: center;
   z-index: 999;
   grid-template-rows: 1fr auto;
@@ -445,7 +442,16 @@ key {
   line-height: 2rem;
 }
 
-#firstRow,
+#firstRow {
+  display: flex;
+  flex-wrap: nowrap; /* Prevents the items from wrapping onto a new line */
+  width: 100%;
+  overflow: hidden; /* Hides any words that don't fit */
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
+
 #words {
   height: -moz-fit-content;
   height: fit-content;
