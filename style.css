@@ -6,15 +6,10 @@
   --caret-color: #fff;
   --current-word-color: #eee;
   --roundness: 0.25rem;
+  --word-margin: 8px;
+  font-size: 1.5rem;
 }
 
-/* 
-:root {
-  --main-color: #111;
-  --sub-color: #444;
-  --sub2-color: #444;
-  --bg-color: #fff;
-} */
 body {
   margin: 0;
   padding: 2rem;
@@ -160,8 +155,8 @@ a:hover {
 }
 
 #centerContent {
-  max-width: 800px;
-  min-width: 600px;
+  max-width: 40rem;
+  min-width: 30rem;
   margin: 0 auto;
   display: grid;
   grid-auto-flow: row;
@@ -465,7 +460,7 @@ key {
 }
 
 .word {
-  margin: 5px;
+  margin: var(--word-margin);
   color: var(--sub-color);
   display: flex;
   transition: 0.25s;
@@ -478,7 +473,7 @@ key {
   height: -moz-fit-content;
   height: fit-content;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   width: 100%;
   align-content: flex-start;
 }
@@ -553,7 +548,7 @@ key {
 }
 
 .word letter.missing {
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 * {

@@ -2,6 +2,7 @@ import { words } from "./words.js";
 
 let wordsList = [];
 let currentWordIndex = 0;
+let firstRowWordIndex = 0;
 let inputHistory = [];
 let currentInput = "";
 let wordsConfig = 50;
@@ -146,8 +147,7 @@ function showWords() {
 	let currentLineWidth = 0;
 	const containerWidth = parseInt($("#centerContent").css("max-width"));
 	const letterWidth = parseFloat(getComputedStyle(document.documentElement).fontSize);
-	const wordSpacing = 10;
-
+	const wordSpacing = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--word-margin")) * 2;
 	console.log(containerWidth, letterWidth, wordSpacing);
 
 	// create words and track which ones fit in first row
@@ -166,15 +166,18 @@ function showWords() {
 			$("#words").append(wordDiv);
 		}
 	}
+
+	// inputDisplay initialization
+	firstRowWordIndex = 0;
 	newWord();
 	updateCaretPosition();
 }
 
-function updateCurrentWord() {
+function updateFirstRowCurrentWord() {
 	$("#firstRow .word").removeClass("current");
-	$($("#firstRow .word")[currentWordIndex]).addClass("current");
+	$($("#firstRow .word")[firstRowWordIndex]).addClass("current");
 	$("#inputDisplay .word").removeClass("current");
-	$($("#inputDisplay .word")[currentWordIndex]).addClass("current").removeClass("error");
+	$($("#inputDisplay .word")[firstRowWordIndex]).addClass("current").removeClass("error");
 	$("#inputDisplay .word").each(function (index) {
 		console.log(`Word ${index}:`, $(this)[0].outerHTML);
 	});
@@ -182,12 +185,12 @@ function updateCurrentWord() {
 
 function newWord() {
 	$("#inputDisplay").append("<div class='word'><letter></letter></div>");
-	updateCurrentWord();
+	updateFirstRowCurrentWord();
 }
 
 function deleteWord() {
 	$("#inputDisplay .word").last().remove();
-	updateCurrentWord();
+	updateFirstRowCurrentWord();
 }
 
 function highlightMissedLetters() {
@@ -247,7 +250,7 @@ function updateCaretPosition() {
 	// if (currentLetterIndex == -1) {
 	// 	currentLetterIndex = 0;
 	// }
-	let lastLetter = $("#inputDisplay .word.current letter, .word.current active-letter").last();
+	let lastLetter = $("#inputDisplay .word.current letter, #inputDisplay .word.current active-letter").last();
 	let lastLetterPos = lastLetter.position();
 	let letterHeight = lastLetter.height();
 
@@ -473,7 +476,7 @@ function compareInput(addMissing = false) {
 	}
 	if (addMissing && currentInput.length < currentWord.length) {
 		for (let i = currentInput.length; i < currentWord.length; i++) {
-			ret += "<letter>" + currentWord[i] + "</letter>";
+			ret += '<letter class="missing">' + currentWord[i] + "</letter>";
 		}
 	}
 	// show result if reached last word and input is correct
@@ -698,6 +701,7 @@ $(document).keydown((event) => {
 						console.log("went back to word:", currentInput);
 					}
 					currentWordIndex--;
+					firstRowWordIndex--;
 					deleteWord();
 				}
 			} else {
@@ -737,28 +741,33 @@ $(document).keydown((event) => {
 					}
 				}
 			}
-			if (currentWord == currentInput) {
-				inputHistory.push(currentInput);
-				currentInput = "";
-				currentWordIndex++;
-				newWord(); // make the new empty word active
-				updateCaretPosition();
-				console.log("completed a good word");
-				// don't have to show result since space isn't needed at the end
-			} else {
-				inputHistory.push(currentInput);
+			if (currentWord != currentInput) {
 				highlightBadWord();
-				currentInput = "";
-				currentWordIndex++;
-				if (currentWordIndex == wordsList.length) {
-					showResult();
-					console.log("finished test, last word is bad word");
-					return;
-				}
-				newWord();
-				updateCaretPosition();
-				console.log("completed a bad word");
+				// if (currentWordIndex == wordsList.length) {
+				// 	showResult();
+				// 	console.log("finished test, last word is bad word");
+				// 	return;
+				// }
 			}
+			inputHistory.push(currentInput);
+			currentInput = "";
+			currentWordIndex++;
+			firstRowWordIndex++;
+			if ($("#firstRow .word.current").is($("#firstRow .word").last())) {
+				$("#inputDisplay").empty();
+				firstRowWordIndex = 0;
+				// fill first row
+				const wordsTop = $("#words").children().first().position().top;
+				const wordsTopRow = $("#words")
+					.children()
+					.filter(function () {
+						return $(this).position().top === wordsTop;
+					});
+				$("#firstRow").empty();
+				$("#firstRow").append(wordsTopRow);
+			}
+			newWord(); // make the new empty word active
+			updateCaretPosition();
 			if (testMode == "time") {
 				addWord();
 			}
