@@ -142,43 +142,31 @@ function addWord() {
 function showWords() {
 	$("#words").empty();
 	$("#firstRow").empty();
-	// create words for #words
-	if (testMode == "words" || testMode == "custom") {
-		for (let i = 0; i < wordsList.length; i++) {
-			let w = "<div class='word'>";
-			for (let c = 0; c < wordsList[i].length; c++) {
-				w += "<letter>" + wordsList[i].charAt(c) + "</letter>";
-			}
-			w += "</div>";
-			$("#words").append(w);
+	let currentLineWidth = 0;
+	const containerWidth = parseInt($("#centerContent").css("max-width"));
+	const letterWidth = parseFloat(getComputedStyle(document.documentElement).fontSize);
+	const wordSpacing = 10;
+
+	console.log(containerWidth, letterWidth, wordSpacing);
+
+	// create words and track which ones fit in first row
+	for (let i = 0; i < wordsList.length; i++) {
+		let wordDiv = $("<div class='word'></div>");
+		for (let c = 0; c < wordsList[i].length; c++) {
+			wordDiv.append($("<letter>" + wordsList[i].charAt(c) + "</letter>"));
 		}
-	} else if (testMode == "time") {
-		$("#words").css("height", "78px").css("overflow", "hidden");
-		for (let i = 0; i < wordsList.length; i++) {
-			let w = "<div class='word'>";
-			for (let c = 0; c < wordsList[i].length; c++) {
-				w += "<letter>" + wordsList[i].charAt(c) + "</letter>";
-			}
-			w += "</div>";
-			$("#words").append(w);
+
+		// Add word to either firstRow or words div based on width
+		const wordWidth = wordsList[i].length * letterWidth + wordSpacing;
+		if (currentLineWidth + wordWidth <= containerWidth) {
+			$("#firstRow").append(wordDiv);
+			currentLineWidth += wordWidth;
+		} else {
+			$("#words").append(wordDiv);
 		}
 	}
-
-	requestAnimationFrame(() => {
-		// move first row of #words to #firstRow
-		const firstRowTop = $("#words").children().first().position().top;
-		const firstRowWords = $("#words")
-			.children()
-			.filter(function () {
-				return $(this).position().top === firstRowTop;
-			});
-		$("#firstRow").append(firstRowWords); // IMPORTANT: jQuery append() MOVES elements, that's why we don't have to modify #words again
-		console.log(firstRowWords);
-
-		// create starting point for #inputDisplay
-		newWord();
-		updateCaretPosition();
-	});
+	newWord();
+	updateCaretPosition();
 }
 
 function updateCurrentWord() {
