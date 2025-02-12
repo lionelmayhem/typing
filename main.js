@@ -17,8 +17,6 @@ let punctuationMode = false;
 let isComposing = false;
 let activeText = "";
 
-let customText = "The quick brown fox jumped over the lazy dog";
-
 function setFocus(foc) {
 	if (foc) {
 		// focus = true;
@@ -193,28 +191,8 @@ function deleteWord() {
 	updateFirstRowCurrentWord();
 }
 
-function highlightMissedLetters() {
-	let currentWord = wordsList[currentWordIndex];
-	$(".word.active letter").addClass("incorrect");
-	for (let i = 0; i < currentInput.length; i++) {
-		if (currentWord[i] == currentInput[i]) {
-			$($(".word.active letter")[i]).removeClass("incorrect").addClass("correct");
-		}
-	}
-}
-
 function highlightBadWord() {
 	$("#inputDisplay .word").last().addClass("error");
-}
-
-function hideMissedLetters() {
-	let currentWord = wordsList[currentWordIndex];
-	$(".word.active letter").addClass("missing");
-	for (let i = 0; i < currentInput.length; i++) {
-		if (currentWord[i] == currentInput[i]) {
-			$($(".word.active letter")[i]).removeClass("missing").addClass("incorrect");
-		}
-	}
 }
 
 function hideCaret() {
@@ -246,10 +224,6 @@ function hideTimer() {
 function updateCaretPosition() {
 	let caret = $("#caret");
 	let inputLen = currentInput.length;
-	// let currentLetterIndex = inputLen - 1;
-	// if (currentLetterIndex == -1) {
-	// 	currentLetterIndex = 0;
-	// }
 	let lastLetter = $("#inputDisplay .word.current letter, #inputDisplay .word.current active-letter").last();
 	let lastLetterPos = lastLetter.position();
 	let letterHeight = lastLetter.height();
@@ -608,10 +582,8 @@ $("#wordsInput").on("compositionend", (e) => {
 	compareInput();
 });
 
-// $("#inputDisplay").append("<div class='active'></div>");
-
 function showInput() {
-	// will always be composing?
+	// what is shown during composition
 	let lastWord = $("#inputDisplay .word").last();
 	let letters = "<letter></letter>";
 	let currentLen = currentInput.length;
@@ -631,8 +603,7 @@ $("#wordsInput").on("input", (e) => {
 		console.log("DELETE");
 		return;
 	}
-	// backspace, space before and composition and space after compositionend will not get triggered
-	if (!$("#wordsInput").is(":focus")) return; // Don't process if not focused
+	if (!$("#wordsInput").is(":focus")) return;
 	if (currentInput == "" && inputHistory.length == 0) {
 		testActive = true;
 		stopCaretAnimation();
@@ -741,15 +712,15 @@ $(document).keydown((event) => {
 					}
 				}
 			}
-			if (currentWord != currentInput) {
-				highlightBadWord();
-				// if (currentWordIndex == wordsList.length) {
-				// 	showResult();
-				// 	console.log("finished test, last word is bad word");
-				// 	return;
-				// }
-			}
 			inputHistory.push(currentInput);
+			if (currentWord != currentInput) {
+				highlightBadWord(); // red underline
+				if (currentWordIndex == wordsList.length - 1) {
+					showResult();
+					console.log("finished test, last word is bad word");
+					return;
+				}
+			}
 			currentInput = "";
 			currentWordIndex++;
 			firstRowWordIndex++;
@@ -1037,7 +1008,3 @@ document.addEventListener("DOMContentLoaded", () => {
 $(document).on("click", ".button", (e) => {
 	console.log("Any button clicked:", e.currentTarget);
 });
-
-// $("#wordsInput").on("input", function (e) {
-// 	console.log("FUCKING RAW INPUT:", e.target.value);
-// });
