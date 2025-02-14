@@ -204,11 +204,11 @@ function calculateStats() {
 	let testSeconds = (testEnd - testStart) / 1000;
 	let wpm = 0;
 	if (testMode == "time") {
-		wpm = correctChars * (60 / timeConfig);
+		wpm = Math.round(correctChars * (60 / timeConfig));
 	} else if (testMode == "words" || testMode == "custom") {
-		wpm = correctChars * (60 / testSeconds);
+		wpm = Math.round(correctChars * (60 / testSeconds));
 	}
-	$("#liveWpm").text(Math.round(wpm));
+	$("#liveWpm").text(wpm);
 	let totalTyped = correctChars + incorrectChars;
 	let acc;
 	if (totalTyped > totalChars) {
@@ -218,7 +218,7 @@ function calculateStats() {
 	}
 	let key = correctChars + "/" + (incorrectChars + missedChars);
 	console.log({ totalChars, correctChars, missedChars, incorrectChars });
-	return { wpm: Math.round(wpm), acc: acc, key: key };
+	return { wpm: wpm, acc: acc, key: key };
 }
 
 function liveWPM() {
@@ -341,6 +341,7 @@ function timesUp() {
 }
 
 function compareInput(isSpace = false) {
+	console.log("COMPARE INPUT CALLED");
 	let word = "<letter></letter>"; // for updating caret when input.length = 0
 	let currentWord = wordsList[currentWordIndex];
 	$("#inputDisplay .word").last().empty();
@@ -369,6 +370,8 @@ function compareInput(isSpace = false) {
 				$("#firstRow .word.current").append("<letter style='color: transparent'>哈</letter>");
 			} else {
 				word += '<letter class="incorrect">' + currentInput[i] + "</letter>";
+				// original
+				// word += '<letter class="incorrect">' + currentInput[i] + "</letter>";
 			}
 		}
 	}
@@ -490,6 +493,7 @@ $("#wordsInput").on("compositionend", (e) => {
 });
 
 function showInput() {
+	console.log("SHOW INPUT CALLED");
 	// what is shown during composition
 	let lastWord = $("#inputDisplay .word").last();
 	let letters = "<letter></letter>";
@@ -506,10 +510,10 @@ function showInput() {
 }
 
 $("#wordsInput").on("input", (e) => {
-	// if (e.originalEvent.inputType === "deleteContentBackward") {
-	// 	console.log("DELETE BUTTON PRESSED");
-	// 	return;
-	// }
+	if (e.originalEvent.inputType === "deleteContentBackward") {
+		console.log("DELETE BUTTON PRESSED"); // when delete pressed, we need to compareInput not showInput
+		return;
+	}
 	if (!$("#wordsInput").is(":focus")) {
 		console.log("NOT FOCUSED");
 		return;
@@ -568,10 +572,7 @@ $(document).keydown((event) => {
 		if (event.key === "Backspace") {
 			if (!testActive) return;
 			if (currentInput == "" && inputHistory.length > 0) {
-				if (
-					inputHistory[currentWordIndex - 1] == wordsList[currentWordIndex - 1] ||
-					$($(".word")[currentWordIndex - 1]).hasClass("hidden")
-				) {
+				if (inputHistory[currentWordIndex - 1] === wordsList[currentWordIndex - 1] || firstRowWordIndex === 0) {
 					console.log("cannot go back a word");
 					return;
 				} else {
@@ -580,7 +581,7 @@ $(document).keydown((event) => {
 						inputHistory.pop();
 						console.log("went back a word (to start)");
 					} else {
-						event.preventDefault(); // To prevent deleting an extra letter
+						event.preventDefault(); // to prevent deleting an extra letter
 						currentInput = inputHistory.pop();
 						$("#wordsInput").val(currentInput);
 						console.log("went back to word:", currentInput);
@@ -601,6 +602,7 @@ $(document).keydown((event) => {
 
 					console.log("deleted a letter: %s -> %s", currentInput + deleted, currentInput);
 					// console.log("#wordsInput:", $("#wordsInput").val());
+					// console.log("current input:", currentInput);
 				}
 			}
 			compareInput();

@@ -517,7 +517,12 @@ key {
   line-height: 1rem;
   display: inline-block;
   position: relative;
-  vertical-align: bottom;
+}
+
+.word letter:not(:empty),
+.word active-letter:not(:empty) {
+  width: 1em;
+  text-align: center;
 }
 
 .word active-letter {
