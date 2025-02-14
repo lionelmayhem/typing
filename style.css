@@ -145,10 +145,9 @@ a:hover {
 
 #liveWpm {
   font-size: 3rem;
-  color: var(--main-color);
-  opacity: 1;
+  color: var(--sub-color);
+  opacity: 0;
   width: 100%;
-  min-width: 3ch; /* width of 3 digits */
   text-align: center;
   z-index: -1;
   height: 0;

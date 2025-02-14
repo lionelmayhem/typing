@@ -12,7 +12,6 @@ let timer = null;
 let testActive = false;
 let testMode = "words";
 let testStart, testEnd;
-let missedChars = 0;
 let isComposing = false;
 let activeText = "";
 let wordCorrectChars = [];
@@ -35,7 +34,6 @@ function initWords() {
 	testActive = false;
 	wordsList = [];
 	currentWordIndex = 0;
-	missedChars = 0;
 	inputHistory = [];
 	currentInput = "";
 	if (testMode == "time") {
@@ -189,16 +187,13 @@ function calculateStats() {
 	let correctChars = 0;
 	let incorrectChars = 0;
 	let totalChars = 0;
+	let missedChars = 0;
 	for (let i = 0; i < inputHistory.length; i++) {
-		totalChars += wordsList[i].length + 1;
-		for (let c = 0; c < wordsList[i].length; c++) {
-			try {
-				if (inputHistory[i][c] == wordsList[i][c]) {
-					correctChars++;
-				} else {
-					incorrectChars++;
-				}
-			} catch (err) {
+		totalChars += wordsList[i].length;
+		for (let c = 0; c < inputHistory[i].length; c++) {
+			if (inputHistory[i][c] === wordsList[i][c]) {
+				correctChars++;
+			} else {
 				incorrectChars++;
 			}
 		}
@@ -206,20 +201,23 @@ function calculateStats() {
 			missedChars += wordsList[i].length - inputHistory[i].length;
 		}
 	}
-	totalChars--;
 	let testSeconds = (testEnd - testStart) / 1000;
-	console.log("test seconds:", testSeconds);
 	let wpm = 0;
 	if (testMode == "time") {
 		wpm = correctChars * (60 / timeConfig);
 	} else if (testMode == "words" || testMode == "custom") {
 		wpm = correctChars * (60 / testSeconds);
 	}
-	console.log("RESULT'S WPM", wpm);
 	$("#liveWpm").text(Math.round(wpm));
-	// let acc = (correctChars / totalChars) * 100;
-	let acc = ((totalChars - missedChars) / totalChars) * 100;
-	let key = correctChars + "/" + (totalChars - correctChars);
+	let totalTyped = correctChars + incorrectChars;
+	let acc;
+	if (totalTyped > totalChars) {
+		acc = (correctChars / totalTyped) * 100;
+	} else {
+		acc = (correctChars / totalChars) * 100;
+	}
+	let key = correctChars + "/" + (incorrectChars + missedChars);
+	console.log({ totalChars, correctChars, missedChars, incorrectChars });
 	return { wpm: Math.round(wpm), acc: acc, key: key };
 }
 
@@ -239,6 +237,8 @@ function liveWPM() {
 function showResult() {
 	testEnd = Date.now();
 	let stats = calculateStats();
+	$("#firstRow .word.current").removeClass("current");
+	$("#inputDisplay .word.current").removeClass("current");
 	$("#top .result .wpm .val").text(stats.wpm);
 	$("#top .result .acc .val").text(Math.round(stats.acc) + "%");
 	$("#top .result .key .val").text(stats.key);
@@ -486,9 +486,6 @@ $("#wordsInput").on("compositionend", (e) => {
 	// usually this is when enter is pressed after composing
 	isComposing = false;
 	activeText = "";
-	if (wordsList[currentWordIndex].substring(currentInput.length, currentInput.length + 1) != currentInput) {
-		missedChars++;
-	}
 	compareInput();
 });
 
@@ -568,7 +565,7 @@ $(document).keydown((event) => {
 
 	if ($("#wordsInput").is(":focus")) {
 		// backspace
-		if (event.key == "Backspace") {
+		if (event.key === "Backspace") {
 			if (!testActive) return;
 			if (currentInput == "" && inputHistory.length > 0) {
 				if (
@@ -610,25 +607,27 @@ $(document).keydown((event) => {
 			updateCaretPosition();
 		}
 
-		// space
-		if (event.key == " ") {
+		// space (or enter)
+		let isLastWord = $("#firstRow .word.current").is($("#firstRow .word").last());
+		if (event.key === " " || (event.key === "Enter" && isLastWord)) {
 			event.preventDefault();
 			if (!testActive || isComposing || currentInput === "") return;
 			$("#wordsInput").val("");
 			compareInput(true);
 			let currentWord = wordsList[currentWordIndex];
 
-			if (testMode == "time") {
-				let currentTop = $($("#words .word")[currentWordIndex]).position().top;
-				let nextTop = $($("#words .word")[currentWordIndex + 1]).position().top;
-				if (nextTop > currentTop) {
-					// last word of the line
-					for (let i = 0; i < currentWordIndex + 1; i++) {
-						$($("#words .word")[i]).addClass("hidden");
-						// addWordLine();
-					}
-				}
-			}
+			// if (testMode == "time") {
+			// 	let currentTop = $($("#words .word")[currentWordIndex]).position().top;
+			// 	let nextTop = $($("#words .word")[currentWordIndex + 1]).position().top;
+			// 	if (nextTop > currentTop) {
+			// 		// last word of the line
+			// 		for (let i = 0; i < currentWordIndex + 1; i++) {
+			// 			$($("#words .word")[i]).addClass("hidden");
+			// 			// addWordLine();
+			// 		}
+			// 	}
+			// }
+
 			inputHistory.push(currentInput);
 			if (currentWord != currentInput) {
 				highlightBadWord(); // red underline
@@ -638,10 +637,7 @@ $(document).keydown((event) => {
 					return;
 				}
 			}
-			currentInput = "";
-			currentWordIndex++;
-			firstRowWordIndex++;
-			if ($("#firstRow .word.current").is($("#firstRow .word").last())) {
+			if (isLastWord) {
 				$("#inputDisplay").empty();
 				firstRowWordIndex = 0;
 				// fill first row
@@ -653,8 +649,12 @@ $(document).keydown((event) => {
 					});
 				$("#firstRow").empty();
 				$("#firstRow").append(wordsTopRow);
+			} else {
+				firstRowWordIndex++;
 			}
-			newWord(); // make the new empty word active
+			currentInput = "";
+			currentWordIndex++;
+			newWord(); // create new active empty word in #inputDisplay
 			updateCaretPosition();
 			if (testMode == "time") {
 				addWord();
