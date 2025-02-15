@@ -1,4 +1,4 @@
-import { words } from "./words.js";
+import { twoCharWords, threeCharWords, fourCharWords, solutions } from "./words.js";
 
 let wordsList = [];
 let currentWordIndex = 0;
@@ -18,7 +18,6 @@ let wordCorrectChars = [];
 
 function setFocus(foc) {
 	if (foc) {
-		// focus = true;
 		$("#top").addClass("focus");
 		$("#bottom").addClass("focus");
 		$("body").css("cursor", "none");
@@ -32,37 +31,58 @@ function setFocus(foc) {
 
 function initWords() {
 	testActive = false;
-	wordsList = [];
 	currentWordIndex = 0;
+	wordsList = [];
 	inputHistory = [];
 	currentInput = "";
+
+	// CALCULATING fixed solutions 2x + 3y + 4z = targetLength
+	// let s = [];
+	// let targetLength = 200;
+	// for (let twoCount = Math.floor(targetLength / 6); twoCount <= Math.floor(targetLength / 2); twoCount++) {
+	// 	const excludeTwoCountLength = targetLength - twoCount * 2;
+	// 	for (
+	// 		let threeCount = Math.floor(excludeTwoCountLength / 12);
+	// 		threeCount <= Math.floor(excludeTwoCountLength / 4);
+	// 		threeCount++
+	// 	) {
+	// 		const remainingLength = excludeTwoCountLength - threeCount * 3;
+	// 		if (remainingLength % 4 === 0) {
+	// 			const fourCount = remainingLength / 4;
+	// 			if (
+	// 				fourCount > 14 &&
+	// 				threeCount > 10 &&
+	// 				twoCount > threeCount &&
+	// 				twoCount * 2 + threeCount * 3 + fourCount * 4 === targetLength
+	// 			)
+	// 				s.push({ twoCount, threeCount, fourCount });
+	// 		}
+	// 	}
+	// }
+	// console.log(s);
+
 	if (testMode == "time") {
-		let randomWord = words[Math.floor(Math.random() * words.length)];
-		wordsList.push(randomWord);
-		for (let i = 1; i < 50; i++) {
-			randomWord = words[Math.floor(Math.random() * words.length)];
-			let previousWord = wordsList[i - 1];
-			while (randomWord == previousWord.replace(".", "").replace(",", "").replace("'", "").replace(":", "")) {
-				randomWord = words[Math.floor(Math.random() * words.length)];
-			}
+	} else if (testMode == "words") {
+		const solution = solutions[wordsConfig][Math.floor(Math.random() * solutions[wordsConfig].length)];
+
+		for (let i = 0; i < solution.twoCount; i++) {
+			const randomWord = twoCharWords[Math.floor(Math.random() * twoCharWords.length)];
 			wordsList.push(randomWord);
 		}
-	} else if (testMode == "words") {
-		let randomWord = words[Math.floor(Math.random() * words.length)];
-		wordsList.push(randomWord);
-		for (let i = 1; i < wordsConfig; i++) {
-			randomWord = words[Math.floor(Math.random() * words.length)];
-			let previousWord = wordsList[i - 1];
-			while (randomWord == previousWord.replace(".", "").replace(",", "").replace("'", "").replace(":", "")) {
-				randomWord = words[Math.floor(Math.random() * words.length)];
-			}
+		for (let i = 0; i < solution.threeCount; i++) {
+			const randomWord = threeCharWords[Math.floor(Math.random() * threeCharWords.length)];
 			wordsList.push(randomWord);
+		}
+		for (let i = 0; i < solution.fourCount; i++) {
+			const randomWord = fourCharWords[Math.floor(Math.random() * fourCharWords.length)];
+			wordsList.push(randomWord);
+		}
+		// Fisher-Yates shuffle
+		for (let i = wordsList.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[wordsList[i], wordsList[j]] = [wordsList[j], wordsList[i]];
 		}
 	} else if (testMode == "custom") {
-		let w = customText.split(" ");
-		for (let i = 0; i < w.length; i++) {
-			wordsList.push(w[i]);
-		}
 	}
 	showWords();
 }
@@ -212,9 +232,9 @@ function calculateStats() {
 	let totalTyped = correctChars + incorrectChars;
 	let acc;
 	if (totalTyped > totalChars) {
-		acc = (correctChars / totalTyped) * 100;
+		acc = Math.round((correctChars / totalTyped) * 100);
 	} else {
-		acc = (correctChars / totalChars) * 100;
+		acc = Math.round((correctChars / totalChars) * 100);
 	}
 	let key = correctChars + "/" + (incorrectChars + missedChars);
 	console.log({ totalChars, correctChars, missedChars, incorrectChars });
@@ -240,23 +260,25 @@ function showResult() {
 	$("#firstRow .word.current").removeClass("current");
 	$("#inputDisplay .word.current").removeClass("current");
 	$("#top .result .wpm .val").text(stats.wpm);
-	$("#top .result .acc .val").text(Math.round(stats.acc) + "%");
+	$("#top .result .acc .val").text(stats.acc + "%");
 	$("#top .result .key .val").text(stats.key);
-	$("#top .result .testmode .mode1").text(testMode);
+
 	if (testMode == "time") {
+		$("#top .result .testmode .mode1").text("時間");
 		$("#top .result .testmode .mode2").text(timeConfig);
 	} else if (testMode == "words") {
+		$("#top .result .testmode .mode1").text("字數");
 		$("#top .result .testmode .mode2").text(wordsConfig);
 	}
-	$("#top .result .testmode .mode3").text("");
 	testActive = false;
+	$("#top .result .testmode .mode3").text("");
 	$("#top .config").addClass("hidden");
 	$("#top .result")
 		.removeClass("hidden")
 		.animate({ opacity: 1 }, 0, () => {
 			setFocus(false);
 		});
-	$("#top #liveWpm").css("opacity", 0);
+	$("#liveWpm").css("opacity", 0);
 	hideCaret();
 }
 
