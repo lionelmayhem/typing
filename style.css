@@ -8,6 +8,9 @@
   --roundness: 0.25rem;
   --word-margin: 8px;
   font-size: 1.5rem;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
 
 body {
@@ -322,14 +325,31 @@ a:hover {
 }
 
 #liveWpm {
-  font-size: 3rem;
-  color: var(--sub-color);
+  margin: 2rem auto 0.4rem auto;
+  display: grid;
   opacity: 0;
-  width: 100%;
-  text-align: center;
-  z-index: -1;
-  height: 0;
+  grid-auto-flow: column;
+  width: -moz-fit-content;
+  width: fit-content;
+  grid-auto-columns: 1fr;
   transition: 0.25s;
+}
+
+#liveWpm .group .val {
+  font-size: 1.7rem;
+  line-height: 1.7rem;
+  text-align: center;
+  color: var(--sub-color);
+  transition: 0.25s;
+  margin-bottom: 0.35rem;
+}
+
+#liveWpm .group .title {
+  font-size: 0.65rem;
+  line-height: 0.65rem;
+  text-align: center;
+  color: var(--sub-color);
+  white-space: nowrap;
 }
 
 #middle .result {
@@ -442,9 +462,6 @@ key {
   flex-wrap: nowrap; /* Prevents the items from wrapping onto a new line */
   width: 100%;
   overflow: hidden; /* Hides any words that don't fit */
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
 }
 
 #words {

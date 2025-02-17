@@ -235,7 +235,7 @@ function calculateStats() {
 	} else if (testMode == "words" || testMode == "custom") {
 		wpm = Math.round(correctChars * (60 / testSeconds));
 	}
-	$("#liveWpm").text(wpm);
+	$("#liveWpm .group .val").text(wpm);
 	let totalTyped = correctChars + incorrectChars;
 	let acc;
 	if (totalTyped > totalChars) {
@@ -258,17 +258,19 @@ function liveWPM() {
 	if ($("#liveWpm").css("opacity") == 0) {
 		$("#liveWpm").css("opacity", 1);
 	}
-	$("#liveWpm").text(Math.round(wpm));
+	$("#liveWpm .group .val").text(Math.round(wpm));
 }
 
 function showResult() {
 	testEnd = Date.now();
 	let stats = calculateStats();
+	$("#liveWpm").css("opacity", 0);
+	$("#liveWpm").addClass("hidden");
 	$("#firstRow .word.current").removeClass("current");
 	$("#inputDisplay .word.current").removeClass("current");
 
 	$("#middle .result .wpm .val").text(stats.wpm);
-	$("#middle .result .acc .val").text(stats.acc + "%");
+	$("#middle .result .acc .val").html(stats.acc + "<span style='font-size: 0.75em'>%</span>");
 	$("#middle .result .key .val").text(stats.key);
 
 	testActive = false;
@@ -277,7 +279,6 @@ function showResult() {
 		.animate({ opacity: 1 }, 0, () => {
 			setFocus(false);
 		});
-	// $("#liveWpm").css("opacity", 0);
 	hideCaret();
 }
 
@@ -292,26 +293,9 @@ function updateTimer() {
 function restartTest() {
 	$("#wordsInput").val("");
 	let oldHeight = $("#words").height();
-	let resultShown = !$("#middle .result").hasClass("hidden");
-	$("#middle .result")
-		.css("opacity", "1")
-		.css("transition", "none")
-		.stop(true, true)
-		.animate({ opacity: 0 }, 250, () => {
-			$("#middle .result").addClass("hidden").css("transition", "0.25s");
-			if (testActive || resultShown) {
-				$("#top .config")
-					.css("opacity", "0")
-					.removeClass("hidden")
-					.css("transition", "none")
-					.stop(true, true)
-					.animate({ opacity: 1 }, 250, () => {
-						$("#top .config").css("transition", "0.25s");
-					});
-			}
-		});
+	$("#middle .result").addClass("hidden");
 	setFocus(false);
-	$("#liveWpm").css("opacity", 0);
+	$("#liveWpm").removeClass("hidden");
 	$("#wordsInput").focus();
 	initWords();
 	testActive = false;
@@ -485,20 +469,20 @@ $("#restartTestButton").click((event) => {
 });
 
 $("#firstRow, #inputDisplay, #words").click((e) => {
-	$("#wordsInput").focus();
+	if ($("#middle .result").hasClass("hidden")) {
+		$("#wordsInput").focus();
+	}
 });
 
-$("#wordsInput").on("focus", (event) => {
-	showCaret();
-});
-
-$("#wordsInput").on("focusout", (event) => {
-	hideCaret();
+$("#wordsInput").on({
+	focus: () => {
+		if ($("#middle .result").hasClass("hidden")) showCaret();
+	},
+	focusout: hideCaret,
 });
 
 $("#wordsInput").on("compositionstart", (e) => {
 	isComposing = true;
-
 	activeText = e.originalEvent.data;
 });
 
@@ -531,6 +515,11 @@ function showInput() {
 }
 
 $("#wordsInput").on("input", (e) => {
+	// const text = e.target.value;
+	// const lastChar = text.slice(-1);
+	// const isTradChinese = /[\u4e00-\u9fff\u3105-\u312F]/.test(lastChar);
+	// console.log(`"${lastChar}" is ${isTradChinese ? "Trad Chinese" : "Not Trad Chinese"}`);
+
 	if (e.originalEvent.inputType === "deleteContentBackward") {
 		console.log("DELETE BUTTON PRESSED"); // when delete pressed, we need to compareInput not showInput
 		return;
