@@ -250,7 +250,7 @@ function calculateStats() {
 
 function liveWPM() {
 	let testNow = Date.now();
-	let testSeconds = Math.round((testNow - testStart) / 1000);
+	let testSeconds = (testNow - testStart) / 1000;
 	let correctChars = wordCorrectChars.reduce((sum, count) => sum + count, 0);
 	let wpm = correctChars * (60 / testSeconds);
 	console.log("test seconds:", testSeconds);
