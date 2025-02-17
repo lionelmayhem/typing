@@ -92,25 +92,6 @@
                     </div>
                 </div>
 
-                <div class="result hidden">
-                    <div class="group testmode" style="align-self: center">
-                        <div class="title mode1">words</div>
-                        <div class="title mode2">100</div>
-                        <div class="title mode3">100</div>
-                    </div>
-                    <div class="group key">
-                        <div class="title">正確/失誤</div>
-                        <div class="val">100/1</div>
-                    </div>
-                    <div class="group acc">
-                        <div class="title">準確度</div>
-                        <div class="val">95%</div>
-                    </div>
-                    <div class="group wpm">
-                        <div class="title">速度（字/分）</div>
-                        <div class="val">100</div>
-                    </div>
-                </div>
                 <div class="config">
                     <div class="group mode">
                         <div class="buttons">
@@ -121,9 +102,9 @@
                     </div>
                     <div class="group wordCount">
                         <div class="buttons">
-                            <div class="button" wordCount="10">10</div>
+                            <div class="button active" wordCount="10">10</div>
                             <div class="button" wordCount="25">25</div>
-                            <div class="button active" wordCount="50">50</div>
+                            <div class="button" wordCount="50">50</div>
                             <div class="button" wordCount="100">100</div>
                             <div class="button" wordCount="200">200</div>
                         </div>
@@ -150,6 +131,22 @@
             <div id="firstRow" class=""></div>
             <div id="inputDisplay" class=""></div>
             <div id="words" class=""></div>
+
+            <div class="result hidden">
+                <div class="group key">
+                    <div class="val"></div>
+                    <div class="title">正確/失誤</div>
+                </div>
+                <div class="group wpm">
+                    <div class="val"></div>
+                    <div class="title">速度(字/分)</div>
+                </div>
+                <div class="group acc">
+                    <div class="val"></div>
+                    <div class="title">準確度</div>
+                </div>
+            </div>
+
             <div id="restartTestButton" tabindex="0"><i class="fas fa-redo-alt"></i></div>
             <div id="liveWpm" class=""></div>
         </div>

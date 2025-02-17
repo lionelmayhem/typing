@@ -5,7 +5,7 @@ let currentWordIndex = 0;
 let firstRowWordIndex = 0;
 let inputHistory = [];
 let currentInput = "";
-let wordsConfig = 50;
+let wordsConfig = 10;
 let timeConfig = 30;
 let time = timeConfig;
 let timer = null;
@@ -63,20 +63,13 @@ function initWords() {
 
 	if (testMode == "time") {
 	} else if (testMode == "words") {
+		let existingWords = new Set();
 		const solution = solutions[wordsConfig][Math.floor(Math.random() * solutions[wordsConfig].length)];
 
-		for (let i = 0; i < solution.twoCount; i++) {
-			const randomWord = twoCharWords[Math.floor(Math.random() * twoCharWords.length)];
-			wordsList.push(randomWord);
-		}
-		for (let i = 0; i < solution.threeCount; i++) {
-			const randomWord = threeCharWords[Math.floor(Math.random() * threeCharWords.length)];
-			wordsList.push(randomWord);
-		}
-		for (let i = 0; i < solution.fourCount; i++) {
-			const randomWord = fourCharWords[Math.floor(Math.random() * fourCharWords.length)];
-			wordsList.push(randomWord);
-		}
+		addRandomWords(solution.twoCount, twoCharWords, existingWords, wordsList);
+		addRandomWords(solution.threeCount, threeCharWords, existingWords, wordsList);
+		addRandomWords(solution.fourCount, fourCharWords, existingWords, wordsList);
+
 		// Fisher-Yates shuffle
 		for (let i = wordsList.length - 1; i > 0; i--) {
 			const j = Math.floor(Math.random() * (i + 1));
@@ -85,6 +78,20 @@ function initWords() {
 	} else if (testMode == "custom") {
 	}
 	showWords();
+}
+
+function addRandomWords(count, wordArray, existingWords, wordsList) {
+	if (count > wordArray.length) {
+		throw new Error("Not enough uniques words available");
+	}
+	for (let i = 0; i < count; i++) {
+		let randomWord;
+		do {
+			randomWord = wordArray[Math.floor(Math.random() * wordArray.length)];
+		} while (existingWords.has(randomWord));
+		wordsList.push(randomWord);
+		existingWords.add(randomWord);
+	}
 }
 
 function addWord() {
@@ -259,26 +266,18 @@ function showResult() {
 	let stats = calculateStats();
 	$("#firstRow .word.current").removeClass("current");
 	$("#inputDisplay .word.current").removeClass("current");
-	$("#top .result .wpm .val").text(stats.wpm);
-	$("#top .result .acc .val").text(stats.acc + "%");
-	$("#top .result .key .val").text(stats.key);
 
-	if (testMode == "time") {
-		$("#top .result .testmode .mode1").text("時間");
-		$("#top .result .testmode .mode2").text(timeConfig);
-	} else if (testMode == "words") {
-		$("#top .result .testmode .mode1").text("字數");
-		$("#top .result .testmode .mode2").text(wordsConfig);
-	}
+	$("#middle .result .wpm .val").text(stats.wpm);
+	$("#middle .result .acc .val").text(stats.acc + "%");
+	$("#middle .result .key .val").text(stats.key);
+
 	testActive = false;
-	$("#top .result .testmode .mode3").text("");
-	$("#top .config").addClass("hidden");
-	$("#top .result")
+	$("#middle .result")
 		.removeClass("hidden")
 		.animate({ opacity: 1 }, 0, () => {
 			setFocus(false);
 		});
-	$("#liveWpm").css("opacity", 0);
+	// $("#liveWpm").css("opacity", 0);
 	hideCaret();
 }
 
@@ -293,13 +292,13 @@ function updateTimer() {
 function restartTest() {
 	$("#wordsInput").val("");
 	let oldHeight = $("#words").height();
-	let resultShown = !$("#top .result").hasClass("hidden");
-	$("#top .result")
+	let resultShown = !$("#middle .result").hasClass("hidden");
+	$("#middle .result")
 		.css("opacity", "1")
 		.css("transition", "none")
 		.stop(true, true)
 		.animate({ opacity: 0 }, 250, () => {
-			$("#top .result").addClass("hidden").css("transition", "0.25s");
+			$("#middle .result").addClass("hidden").css("transition", "0.25s");
 			if (testActive || resultShown) {
 				$("#top .config")
 					.css("opacity", "0")
